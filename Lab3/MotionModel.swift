@@ -35,13 +35,13 @@ class MotionModel {
         }
     }
     
-    // Start monitoring step count using the pedometer.
+    // Start monitoring step count using the pedometer, only for today's steps.
     func startPedometerMonitoring() {
         if CMPedometer.isStepCountingAvailable() {  // Check if step counting is available on this device.
             let calendar = Calendar.current
             let startOfDay = calendar.startOfDay(for: Date())  // Get the start of the current day (midnight).
             
-            // Start receiving pedometer updates from the beginning of the day.
+            // Start receiving pedometer updates from the beginning of today.
             pedometer.startUpdates(from: startOfDay) { (pedData, error) in
                 if let error = error {  // Handle any errors that occur while retrieving pedometer data.
                     print("Pedometer error: \(error.localizedDescription)")  // Print the error message.
@@ -73,6 +73,12 @@ class MotionModel {
         
         // Query the pedometer for step data between the start of yesterday and the start of today.
         pedometer.queryPedometerData(from: startOfYesterday, to: startOfToday) { (data, error) in
+            if let error = error {
+                print("Error fetching yesterday's steps: \(error.localizedDescription)")
+                completion(0)
+                return
+            }
+            
             if let pedData = data {
                 completion(Int(truncating: pedData.numberOfSteps))  // Return the number of steps taken yesterday.
             } else {
